@@ -9,11 +9,12 @@ window.initSidebar = function() {
         pageWrap: document.querySelector('.page_wrap')
     };
     
-    const ANIMATION_DURATION = 300; // Match this with your CSS transition duration
+    const ANIMATION_DURATION = 300;
     let rangeSliderInitialized = false;
     let mobileInitialized = false;
     let desktopInitialized = false;
     let resizeTimeout;
+    let scrollTimeout;
     
     function initializeRangeSlider() {
         if (window.innerWidth < 992 && mobileInitialized) return;
@@ -36,16 +37,33 @@ window.initSidebar = function() {
     }
     
     function reinitializeRangeSlider() {
-        if (window.FsAttributes && window.FsAttributes.rangeslider) {
-            // Wait for sidebar animation to complete before reinitializing
-            setTimeout(() => {
+        // Only reinitialize if sidebar is open
+        if (!elements.sidebar.classList.contains('is-open')) return;
+
+        // Force layout recalculation
+        elements.sidebar.style.display = 'none';
+        elements.sidebar.offsetHeight; // Force reflow
+        elements.sidebar.style.display = '';
+
+        setTimeout(() => {
+            if (window.FsAttributes && window.FsAttributes.rangeslider) {
+                // Get all range slider wrappers
+                const wrappers = document.querySelectorAll('[fs-rangeslider-element="wrapper"]');
+                wrappers.forEach(wrapper => {
+                    // Force track width recalculation
+                    const track = wrapper.querySelector('[fs-rangeslider-element="track"]');
+                    if (track) {
+                        const width = track.clientWidth;
+                        track.style.width = `${width}px`;
+                    }
+                });
+
                 window.FsAttributes.rangeslider.destroy();
                 window.FsAttributes.rangeslider.init();
-            }, ANIMATION_DURATION);
-        }
+            }
+        }, ANIMATION_DURATION);
     }
     
-    // Debounced resize handler
     function handleResize() {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
@@ -55,10 +73,13 @@ window.initSidebar = function() {
         }, ANIMATION_DURATION);
     }
     
-    // Handle scroll events
     function handleScroll() {
         if (window.innerWidth < 992 && elements.sidebar.classList.contains('is-open')) {
-            reinitializeRangeSlider();
+            clearTimeout(scrollTimeout);
+            // Use requestAnimationFrame to ensure smooth handling
+            scrollTimeout = requestAnimationFrame(() => {
+                reinitializeRangeSlider();
+            });
         }
     }
     
@@ -101,23 +122,9 @@ window.initSidebar = function() {
         }
     });
     
-    // Add scroll and resize listeners with timing consideration
-    const debouncedScroll = debounce(handleScroll, ANIMATION_DURATION);
-    window.addEventListener('scroll', debouncedScroll, { passive: true });
+    // Add scroll and resize listeners with improved handling
+    window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', handleResize, { passive: true });
-    
-    // Utility function for debouncing
-    function debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout);
-                func(...args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
-    }
     
     console.log('Sidebar initialization complete');
 };
