@@ -9,6 +9,7 @@ window.initSidebar = function() {
         pageWrap: document.querySelector('.page_wrap')
     };
     
+    const ANIMATION_DURATION = 300; // Match this with your CSS transition duration
     let rangeSliderInitialized = false;
     let mobileInitialized = false;
     let desktopInitialized = false;
@@ -36,9 +37,11 @@ window.initSidebar = function() {
     
     function reinitializeRangeSlider() {
         if (window.FsAttributes && window.FsAttributes.rangeslider) {
-            // Force recalculation of slider dimensions
-            window.FsAttributes.rangeslider.destroy();
-            window.FsAttributes.rangeslider.init();
+            // Wait for sidebar animation to complete before reinitializing
+            setTimeout(() => {
+                window.FsAttributes.rangeslider.destroy();
+                window.FsAttributes.rangeslider.init();
+            }, ANIMATION_DURATION);
         }
     }
     
@@ -49,7 +52,7 @@ window.initSidebar = function() {
             if (elements.sidebar.classList.contains('is-open')) {
                 reinitializeRangeSlider();
             }
-        }, 250);
+        }, ANIMATION_DURATION);
     }
     
     // Handle scroll events
@@ -76,7 +79,7 @@ window.initSidebar = function() {
         }
         
         if (elements.sidebar.classList.contains('is-open')) {
-            setTimeout(initializeRangeSlider, 300);
+            setTimeout(initializeRangeSlider, ANIMATION_DURATION);
         }
     }
     
@@ -98,8 +101,8 @@ window.initSidebar = function() {
         }
     });
     
-    // Add scroll and resize listeners
-    const debouncedScroll = debounce(handleScroll, 100);
+    // Add scroll and resize listeners with timing consideration
+    const debouncedScroll = debounce(handleScroll, ANIMATION_DURATION);
     window.addEventListener('scroll', debouncedScroll, { passive: true });
     window.addEventListener('resize', handleResize, { passive: true });
     
