@@ -15,6 +15,49 @@ window.initSidebar = function() {
     let desktopInitialized = false;
     let resizeTimeout;
     let scrollTimeout;
+    let trackWidths = new Map(); // Store track widths
+    
+    function captureTrackWidths() {
+        const wrappers = document.querySelectorAll('[fs-rangeslider-element="wrapper"]');
+        wrappers.forEach(wrapper => {
+            const track = wrapper.querySelector('[fs-rangeslider-element="track"]');
+            if (track) {
+                // Store the computed width
+                const width = track.getBoundingClientRect().width;
+                trackWidths.set(track, width);
+                
+                // Store the current handle values and positions
+                const handles = wrapper.querySelectorAll('[fs-rangeslider-element="handle"]');
+                const values = Array.from(handles).map(handle => {
+                    const valuenow = handle.getAttribute('aria-valuenow');
+                    return valuenow ? parseFloat(valuenow) : null;
+                });
+                trackWidths.set(wrapper, {width, values});
+            }
+        });
+    }
+    
+    function restoreTrackWidths() {
+        const wrappers = document.querySelectorAll('[fs-rangeslider-element="wrapper"]');
+        wrappers.forEach(wrapper => {
+            const storedData = trackWidths.get(wrapper);
+            if (storedData) {
+                const track = wrapper.querySelector('[fs-rangeslider-element="track"]');
+                if (track) {
+                    // Force the track to maintain its width
+                    track.style.width = `${storedData.width}px`;
+                    
+                    // Restore handle positions
+                    const handles = wrapper.querySelectorAll('[fs-rangeslider-element="handle"]');
+                    handles.forEach((handle, index) => {
+                        if (storedData.values[index] !== null) {
+                            handle.setAttribute('aria-valuenow', storedData.values[index]);
+                        }
+                    });
+                }
+            }
+        });
+    }
     
     function initializeRangeSlider() {
         if (window.innerWidth < 992 && mobileInitialized) return;
@@ -37,28 +80,21 @@ window.initSidebar = function() {
     }
     
     function reinitializeRangeSlider() {
-        // Only reinitialize if sidebar is open
         if (!elements.sidebar.classList.contains('is-open')) return;
-
-        // Force layout recalculation
-        elements.sidebar.style.display = 'none';
-        elements.sidebar.offsetHeight; // Force reflow
-        elements.sidebar.style.display = '';
-
+        
+        // Capture current widths and positions before destroying
+        captureTrackWidths();
+        
         setTimeout(() => {
             if (window.FsAttributes && window.FsAttributes.rangeslider) {
-                // Get all range slider wrappers
-                const wrappers = document.querySelectorAll('[fs-rangeslider-element="wrapper"]');
-                wrappers.forEach(wrapper => {
-                    // Force track width recalculation
-                    const track = wrapper.querySelector('[fs-rangeslider-element="track"]');
-                    if (track) {
-                        const width = track.clientWidth;
-                        track.style.width = `${width}px`;
-                    }
-                });
-
                 window.FsAttributes.rangeslider.destroy();
+                
+                // Restore widths before reinitializing
+                restoreTrackWidths();
+                
+                // Force a reflow
+                elements.sidebar.offsetHeight;
+                
                 window.FsAttributes.rangeslider.init();
             }
         }, ANIMATION_DURATION);
@@ -68,6 +104,8 @@ window.initSidebar = function() {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
             if (elements.sidebar.classList.contains('is-open')) {
+                // Clear stored widths on resize
+                trackWidths.clear();
                 reinitializeRangeSlider();
             }
         }, ANIMATION_DURATION);
@@ -76,7 +114,6 @@ window.initSidebar = function() {
     function handleScroll() {
         if (window.innerWidth < 992 && elements.sidebar.classList.contains('is-open')) {
             clearTimeout(scrollTimeout);
-            // Use requestAnimationFrame to ensure smooth handling
             scrollTimeout = requestAnimationFrame(() => {
                 reinitializeRangeSlider();
             });
@@ -100,6 +137,8 @@ window.initSidebar = function() {
         }
         
         if (elements.sidebar.classList.contains('is-open')) {
+            // Clear stored widths on toggle
+            trackWidths.clear();
             setTimeout(initializeRangeSlider, ANIMATION_DURATION);
         }
     }
@@ -122,7 +161,6 @@ window.initSidebar = function() {
         }
     });
     
-    // Add scroll and resize listeners with improved handling
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', handleResize, { passive: true });
     
