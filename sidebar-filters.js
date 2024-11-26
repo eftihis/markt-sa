@@ -1,4 +1,7 @@
+console.log('Sidebar filters script loaded');
+
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOM Content Loaded');
   const sidebar = document.getElementById('sidebar');
   const overlay = document.getElementById('overlay');
   const toggleButton = document.getElementById('toggleButton');
