@@ -1,12 +1,22 @@
-console.log('Sidebar filters script loaded');
+console.log('Script starting');
 
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('DOM Content Loaded');
+  console.log('DOM loaded');
+  
   const sidebar = document.getElementById('sidebar');
   const overlay = document.getElementById('overlay');
   const toggleButton = document.getElementById('toggleButton');
   const wrapper = document.getElementById('parent-wrapper');
   const pageWrap = document.querySelector('.page_wrap');
+
+  // Log if elements are found
+  console.log({
+    sidebar: !!sidebar,
+    overlay: !!overlay,
+    toggleButton: !!toggleButton,
+    wrapper: !!wrapper,
+    pageWrap: !!pageWrap
+  });
 
   let rangeSliderInitialized = false;
   let mobileInitialized = false;
