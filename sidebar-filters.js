@@ -6,13 +6,17 @@ window.initSidebar = function() {
         overlay: document.getElementById('overlay'),
         toggleButton: document.getElementById('toggleButton'),
         wrapper: document.getElementById('parent-wrapper'),
-        pageWrap: document.querySelector('.page_wrap')
+        pageWrap: document.querySelector('.page_wrap'),
+        handle: document.getElementById('sidebar-handle') // Updated ID
     };
     
     const ANIMATION_DURATION = 300;
     let rangeSliderInitialized = false;
     let mobileInitialized = false;
     let desktopInitialized = false;
+    let touchStartY = 0;
+    let touchCurrentY = 0;
+    let isDragging = false;
     
     function initializeRangeSlider() {
         if (window.innerWidth < 992 && mobileInitialized) return;
@@ -37,30 +41,19 @@ window.initSidebar = function() {
     function reinitializeRangeSlider() {
         if (!elements.sidebar.classList.contains('is-open')) return;
 
-        // For mobile/tablet: temporarily change positioning to allow correct calculations
-        if (window.innerWidth < 992) {
-            const scrollTop = window.pageYOffset;
-            elements.sidebar.style.position = 'absolute';
-            elements.sidebar.style.top = `${scrollTop}px`;
-            
-            // Force reflow
-            elements.sidebar.offsetHeight;
-        }
-
         if (window.FsAttributes && window.FsAttributes.rangeslider) {
             window.FsAttributes.rangeslider.destroy();
             window.FsAttributes.rangeslider.init();
-            
-            // Restore fixed positioning after initialization
-            if (window.innerWidth < 992) {
-                elements.sidebar.style.position = 'fixed';
-                elements.sidebar.style.top = '0';
-            }
         }
     }
     
     function toggleSidebar() {
         console.log('Toggling sidebar');
+        
+        // Reset any transform before toggling
+        elements.sidebar.style.transform = '';
+        elements.overlay.style.opacity = '';
+        
         elements.sidebar.classList.toggle('is-open');
         elements.overlay.classList.toggle('is-open');
         elements.wrapper.classList.toggle('is-open');
@@ -80,6 +73,55 @@ window.initSidebar = function() {
         }
     }
     
+    // Touch event handlers
+    function handleTouchStart(e) {
+        if (window.innerWidth >= 992) return;
+        touchStartY = e.touches[0].clientY;
+        isDragging = true;
+        elements.sidebar.style.transition = 'none';
+        elements.overlay.style.transition = 'opacity 0.15s ease';
+    }
+    
+    function handleTouchMove(e) {
+        if (!isDragging) return;
+        
+        touchCurrentY = e.touches[0].clientY;
+        const deltaY = touchCurrentY - touchStartY;
+        
+        // Only allow dragging downward
+        if (deltaY < 0) return;
+        
+        // Add resistance to the drag
+        const resistance = 0.4;
+        const transform = `translateY(${deltaY * resistance}px)`;
+        elements.sidebar.style.transform = transform;
+        
+        // Adjust overlay opacity based on drag distance
+        const maxDrag = 200;
+        const opacity = 1 - Math.min(deltaY / maxDrag, 1);
+        elements.overlay.style.opacity = opacity;
+    }
+    
+    function handleTouchEnd() {
+        if (!isDragging) return;
+        isDragging = false;
+        
+        const deltaY = touchCurrentY - touchStartY;
+        elements.sidebar.style.transition = '';
+        
+        // If dragged more than 100px down, close the sidebar
+        if (deltaY > 100) {
+            toggleSidebar();
+        } else {
+            // Reset position with animation
+            elements.sidebar.style.transform = '';
+            elements.overlay.style.opacity = '';
+        }
+        
+        touchStartY = 0;
+        touchCurrentY = 0;
+    }
+    
     // Event Listeners
     elements.toggleButton.addEventListener('click', (e) => {
         console.log('Toggle clicked');
@@ -97,6 +139,13 @@ window.initSidebar = function() {
             toggleSidebar();
         }
     });
+    
+    // Touch event listeners for the handle
+    if (elements.handle) {
+        elements.handle.addEventListener('touchstart', handleTouchStart);
+        document.addEventListener('touchmove', handleTouchMove, { passive: true });
+        document.addEventListener('touchend', handleTouchEnd);
+    }
     
     console.log('Sidebar initialization complete');
 };
