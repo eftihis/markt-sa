@@ -3,6 +3,7 @@ window.initSidebar = function() {
     
     const elements = {
         sidebar: document.getElementById('sidebar'),
+        parentWrap: document.getElementById('parent-wrapper'),
         overlay: document.getElementById('overlay'),
         toggleButton: document.getElementById('toggleButton'),
         handle: document.getElementById('sidebar-handle'),
@@ -34,6 +35,7 @@ window.initSidebar = function() {
         
         elements.sidebar.classList.toggle('is-open');
         elements.overlay.classList.toggle('is-open');
+        elements.parentWrap.classList.toggle('is-open');
         
         // Handle mobile scroll lock (under 478px) - ONLY on pageWrap
         if (window.innerWidth <= MOBILE_BREAKPOINT) {
