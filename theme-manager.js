@@ -92,12 +92,14 @@ class ThemeManager {
 
   setupEventListeners() {
     this.mediaQuery.addEventListener('change', this.handleSystemPreference);
+
     if (this.themeToggle) {
       this.themeToggle.addEventListener('click', () => {
         const isDark = this.getCurrentTheme();
         this.setTheme(!isDark, true);
       });
     }
+
     window.addEventListener('unload', () => {
       this.mediaQuery.removeEventListener('change', this.handleSystemPreference);
     });
@@ -113,3 +115,4 @@ if (document.readyState === 'loading') {
 } else {
   initThemeToggle();
 }
+</script>
