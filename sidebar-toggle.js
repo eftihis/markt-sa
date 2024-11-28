@@ -38,7 +38,7 @@ window.initSidebar = function() {
         // Handle mobile scroll lock (under 478px) - ONLY on pageWrap
         if (window.innerWidth <= MOBILE_BREAKPOINT) {
             if (elements.sidebar.classList.contains('is-open')) {
-                elements.pageWrap.style.overflow = 'hidden';
+                elements.pageWrap.style.overflow = 'clip';
                 document.body.style.overflow = 'hidden';
             } else {
                 elements.pageWrap.style.overflow = '';
