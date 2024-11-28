@@ -4,6 +4,10 @@ const THEME_CONFIG = {
   THEMES: {
     LIGHT: 'light',
     DARK: 'dark'
+  },
+  TRANSITION: {
+    DURATION: 200, // match your CSS duration
+    EASING: 'ease' // match your CSS easing
   }
 };
 
@@ -26,19 +30,37 @@ class ThemeManager {
   }
 
   updateStatusBarColor(isDark) {
-    // Wait for CSS transition to complete before updating status bar
-    this.pageWrapper.addEventListener('transitionend', () => {
-      const themeColor = getComputedStyle(this.pageWrapper)
-        .getPropertyValue('--theme--background').trim();
+    // Get the start time of transition
+    const startTime = performance.now();
+    
+    // Create a transition timing function (ease)
+    const easeInOut = t => {
+      return t < .5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
+    };
+    
+    // Animate the status bar color change
+    const animate = (currentTime) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / THEME_CONFIG.TRANSITION.DURATION, 1);
       
-      document.querySelectorAll('meta[name="theme-color"]').forEach(meta => {
-        meta.setAttribute('content', themeColor);
-      });
-      
-      document.querySelectorAll('meta[name="apple-mobile-web-app-status-bar"]').forEach(meta => {
-        meta.setAttribute('content', themeColor);
-      });
-    }, { once: true }); // Only listen once per transition
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        // Final color update at the end of transition
+        const themeColor = getComputedStyle(this.pageWrapper)
+          .getPropertyValue('--theme--background').trim();
+        
+        document.querySelectorAll('meta[name="theme-color"]').forEach(meta => {
+          meta.setAttribute('content', themeColor);
+        });
+        
+        document.querySelectorAll('meta[name="apple-mobile-web-app-status-bar"]').forEach(meta => {
+          meta.setAttribute('content', themeColor);
+        });
+      }
+    };
+    
+    requestAnimationFrame(animate);
   }
 
   setTheme(isDark, saveToStorage = false) {
