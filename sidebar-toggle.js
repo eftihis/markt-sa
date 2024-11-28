@@ -6,15 +6,18 @@ window.initSidebar = function() {
         overlay: document.getElementById('overlay'),
         toggleButton: document.getElementById('toggleButton'),
         handle: document.getElementById('sidebar-handle'),
-        pageWrap: document.querySelector('.page_wrap')
+        pageWrap: document.querySelector('.page_wrap'),
+        sidebarWrap: document.querySelector('.sidebar_wrap')
     };
     
     const MOBILE_BREAKPOINT = 478;
     const ANIMATION_DURATION = 200;
+    const DEFAULT_HEIGHT = 35 * 16; // 35rem in pixels
     let rangeSliderInitialized = false;
     let touchStartY = 0;
     let touchCurrentY = 0;
     let isDragging = false;
+    let isFullHeight = false;
     
     function initializeRangeSlider() {
         if (rangeSliderInitialized) return;
@@ -31,6 +34,8 @@ window.initSidebar = function() {
         // Reset any transform before toggling
         elements.sidebar.style.transform = '';
         elements.overlay.style.opacity = '';
+        elements.sidebarWrap.style.height = '';
+        isFullHeight = false;
         
         elements.sidebar.classList.toggle('is-open');
         elements.overlay.classList.toggle('is-open');
@@ -57,6 +62,7 @@ window.initSidebar = function() {
         touchStartY = e.touches[0].clientY;
         isDragging = true;
         elements.sidebar.style.transition = 'none';
+        elements.sidebarWrap.style.transition = 'none';
         elements.overlay.style.transition = 'opacity 0.15s ease';
     }
     
@@ -66,18 +72,35 @@ window.initSidebar = function() {
         touchCurrentY = e.touches[0].clientY;
         const deltaY = touchCurrentY - touchStartY;
         
-        // Only allow dragging downward
-        if (deltaY < 0) return;
-        
-        // Add resistance to the drag
-        const resistance = 0.4;
-        const transform = `translateY(${deltaY * resistance}px)`;
-        elements.sidebar.style.transform = transform;
-        
-        // Adjust overlay opacity based on drag distance
-        const maxDrag = 200;
-        const opacity = 1 - Math.min(deltaY / maxDrag, 1);
-        elements.overlay.style.opacity = opacity;
+        if (deltaY < 0 && elements.sidebar.classList.contains('is-open')) {
+            // Dragging upward - expand height
+            const currentHeight = isFullHeight ? window.innerHeight : DEFAULT_HEIGHT;
+            const newHeight = Math.min(currentHeight - deltaY, window.innerHeight);
+            elements.sidebarWrap.style.height = `${newHeight}px`;
+
+            // Adjust overlay opacity based on height
+            const maxHeight = window.innerHeight;
+            const opacity = 0.6 + (0.4 * (newHeight / maxHeight));
+            elements.overlay.style.opacity = opacity;
+        } else if (deltaY > 0) {
+            if (isFullHeight) {
+                // If at full height, first return to default height
+                const fullHeight = window.innerHeight;
+                const currentHeight = fullHeight - deltaY;
+                
+                if (currentHeight < DEFAULT_HEIGHT) {
+                    elements.sidebarWrap.style.height = '';
+                    isFullHeight = false;
+                } else {
+                    elements.sidebarWrap.style.height = `${currentHeight}px`;
+                }
+            } else {
+                // Normal downward drag for closing
+                const resistance = 0.4;
+                elements.sidebar.style.transform = `translateY(${deltaY * resistance}px)`;
+                elements.overlay.style.opacity = 1 - Math.min(deltaY / 200, 1);
+            }
+        }
     }
     
     function handleTouchEnd() {
@@ -86,14 +109,36 @@ window.initSidebar = function() {
         
         const deltaY = touchCurrentY - touchStartY;
         elements.sidebar.style.transition = '';
+        elements.sidebarWrap.style.transition = 'height 0.3s ease';
         
-        // If dragged more than 100px down, close the sidebar
-        if (deltaY > 100) {
-            toggleSidebar();
-        } else {
-            // Reset position with animation
-            elements.sidebar.style.transform = '';
-            elements.overlay.style.opacity = '';
+        if (deltaY < 0) {
+            // Was dragging upward
+            const currentHeight = elements.sidebarWrap.offsetHeight;
+            
+            // If dragged more than halfway to full height, snap to full
+            if (currentHeight > (DEFAULT_HEIGHT + window.innerHeight) / 2) {
+                elements.sidebarWrap.style.height = `${window.innerHeight}px`;
+                isFullHeight = true;
+            } else {
+                elements.sidebarWrap.style.height = '';
+                isFullHeight = false;
+            }
+        } else if (deltaY > 0) {
+            if (isFullHeight) {
+                // If dragged down more than halfway from full height, snap to default
+                const currentHeight = elements.sidebarWrap.offsetHeight;
+                if (currentHeight < (window.innerHeight + DEFAULT_HEIGHT) / 2) {
+                    elements.sidebarWrap.style.height = '';
+                    isFullHeight = false;
+                } else {
+                    elements.sidebarWrap.style.height = `${window.innerHeight}px`;
+                }
+            } else if (deltaY > 100) {
+                toggleSidebar();
+            } else {
+                elements.sidebar.style.transform = '';
+                elements.overlay.style.opacity = '';
+            }
         }
         
         touchStartY = 0;
@@ -120,13 +165,18 @@ window.initSidebar = function() {
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
-            // Reset sidebar position and styles on resize
+            if (isFullHeight) {
+                elements.sidebarWrap.style.height = `${window.innerHeight}px`;
+            } else {
+                elements.sidebarWrap.style.height = '';
+            }
             elements.sidebar.style.transform = '';
             elements.overlay.style.opacity = '';
             
             // Reset pageWrap overflow if we resize above mobile breakpoint
             if (window.innerWidth > MOBILE_BREAKPOINT) {
                 elements.pageWrap.style.overflow = '';
+                isFullHeight = false;
             }
         }, 250);
     }, { passive: true });
