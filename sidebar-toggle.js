@@ -12,7 +12,8 @@ window.initSidebar = function() {
     
     const MOBILE_BREAKPOINT = 478;
     const ANIMATION_DURATION = 200;
-    const DEFAULT_HEIGHT = 35 * 16; // 35rem in pixels
+    const DEFAULT_HEIGHT = window.innerHeight * 0.5; // 50vh
+    const FULL_HEIGHT = window.innerHeight; // 100vh
     let rangeSliderInitialized = false;
     let touchStartY = 0;
     let touchCurrentY = 0;
@@ -72,22 +73,18 @@ window.initSidebar = function() {
         const deltaY = touchCurrentY - touchStartY;
         
         if (deltaY < 0 && elements.sidebar.classList.contains('is-open')) {
-            // Make upward drag less sensitive
-            const resistance = 0.3; // Add resistance to upward movement
-            const currentHeight = isFullHeight ? window.innerHeight : DEFAULT_HEIGHT;
-            const newHeight = Math.min(currentHeight - (deltaY * resistance), window.innerHeight);
+            // Dragging upward
+            const currentHeight = isFullHeight ? FULL_HEIGHT : DEFAULT_HEIGHT;
+            const newHeight = Math.min(currentHeight - deltaY, FULL_HEIGHT);
             elements.sidebarWrap.style.height = `${newHeight}px`;
 
             // Adjust overlay opacity based on height
-            const maxHeight = window.innerHeight;
-            const opacity = 0.6 + (0.4 * (newHeight / maxHeight));
+            const opacity = 0.6 + (0.4 * (newHeight / FULL_HEIGHT));
             elements.overlay.style.opacity = opacity;
         } else if (deltaY > 0) {
             if (isFullHeight) {
                 // If at full height, first return to default height
-                const resistance = 0.3; // Add resistance to downward movement too
-                const fullHeight = window.innerHeight;
-                const currentHeight = fullHeight - (deltaY * resistance);
+                const currentHeight = FULL_HEIGHT - deltaY;
                 
                 if (currentHeight < DEFAULT_HEIGHT) {
                     elements.sidebarWrap.style.height = `${DEFAULT_HEIGHT}px`;
@@ -95,8 +92,7 @@ window.initSidebar = function() {
                 } else {
                     elements.sidebarWrap.style.height = `${currentHeight}px`;
                 }
-                // Prevent closing while transitioning from full height
-                return;
+                return; // Prevent closing while transitioning from full height
             } else {
                 // Normal downward drag for closing
                 const resistance = 0.4;
@@ -118,24 +114,24 @@ window.initSidebar = function() {
             // Was dragging upward
             const currentHeight = elements.sidebarWrap.offsetHeight;
             
-            // Require more dragging to snap to full height (75% instead of 50%)
-            if (currentHeight > (DEFAULT_HEIGHT + (window.innerHeight - DEFAULT_HEIGHT) * 0.75)) {
-                elements.sidebarWrap.style.height = `${window.innerHeight}px`;
+            // If dragged more than 75% of the way to full height, snap to full
+            if (currentHeight > DEFAULT_HEIGHT + ((FULL_HEIGHT - DEFAULT_HEIGHT) * 0.75)) {
+                elements.sidebarWrap.style.height = `${FULL_HEIGHT}px`;
                 isFullHeight = true;
             } else {
-                elements.sidebarWrap.style.height = '';
+                elements.sidebarWrap.style.height = `${DEFAULT_HEIGHT}px`;
                 isFullHeight = false;
             }
         } else if (deltaY > 0) {
             if (isFullHeight) {
                 // If dragged down from full height
                 const currentHeight = elements.sidebarWrap.offsetHeight;
-                // Require less dragging to snap to default (25% instead of 50%)
-                if (currentHeight < (window.innerHeight - (window.innerHeight - DEFAULT_HEIGHT) * 0.25)) {
-                    elements.sidebarWrap.style.height = '';
+                // If dragged down more than 25% from full height, snap to default
+                if (currentHeight < FULL_HEIGHT - ((FULL_HEIGHT - DEFAULT_HEIGHT) * 0.25)) {
+                    elements.sidebarWrap.style.height = `${DEFAULT_HEIGHT}px`;
                     isFullHeight = false;
                 } else {
-                    elements.sidebarWrap.style.height = `${window.innerHeight}px`;
+                    elements.sidebarWrap.style.height = `${FULL_HEIGHT}px`;
                 }
             } else if (deltaY > 100) {
                 toggleSidebar();
@@ -169,15 +165,19 @@ window.initSidebar = function() {
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
+            // Update height values on resize
+            const newFullHeight = window.innerHeight;
+            const newDefaultHeight = window.innerHeight * 0.5;
+            
             if (isFullHeight) {
-                elements.sidebarWrap.style.height = `${window.innerHeight}px`;
-            } else {
-                elements.sidebarWrap.style.height = '';
+                elements.sidebarWrap.style.height = `${newFullHeight}px`;
+            } else if (elements.sidebar.classList.contains('is-open')) {
+                elements.sidebarWrap.style.height = `${newDefaultHeight}px`;
             }
+            
             elements.sidebar.style.transform = '';
             elements.overlay.style.opacity = '';
             
-            // Reset pageWrap overflow if we resize above mobile breakpoint
             if (window.innerWidth > MOBILE_BREAKPOINT) {
                 elements.pageWrap.style.overflow = '';
                 isFullHeight = false;
