@@ -6,18 +6,15 @@ window.initSidebar = function() {
         overlay: document.getElementById('overlay'),
         toggleButton: document.getElementById('toggleButton'),
         handle: document.getElementById('sidebar-handle'),
-        pageWrap: document.querySelector('.page_wrap'),
-        sidebarWrap: document.querySelector('.sidebar_wrap')
+        pageWrap: document.querySelector('.page_wrap')
     };
     
     const MOBILE_BREAKPOINT = 478;
     const ANIMATION_DURATION = 300;
-    const DEFAULT_HEIGHT = 35 * 16; // 35rem in pixels
     let rangeSliderInitialized = false;
     let touchStartY = 0;
     let touchCurrentY = 0;
     let isDragging = false;
-    let isFullHeight = false;
     
     function initializeRangeSlider() {
         if (rangeSliderInitialized) return;
@@ -31,15 +28,14 @@ window.initSidebar = function() {
     function toggleSidebar() {
         console.log('Toggling sidebar');
         
+        // Reset any transform before toggling
         elements.sidebar.style.transform = '';
         elements.overlay.style.opacity = '';
-        elements.sidebarWrap.style.height = '';
-        isFullHeight = false;
         
         elements.sidebar.classList.toggle('is-open');
         elements.overlay.classList.toggle('is-open');
         
-        // Handle mobile scroll lock (under 478px)
+        // Handle mobile scroll lock (under 478px) - ONLY on pageWrap
         if (window.innerWidth <= MOBILE_BREAKPOINT) {
             if (elements.sidebar.classList.contains('is-open')) {
                 elements.pageWrap.style.overflow = 'hidden';
@@ -50,17 +46,18 @@ window.initSidebar = function() {
             }
         }
         
+        // Initialize range slider on first open
         if (elements.sidebar.classList.contains('is-open')) {
             setTimeout(initializeRangeSlider, ANIMATION_DURATION);
         }
     }
     
+    // Touch event handlers for swipe
     function handleTouchStart(e) {
-        if (window.innerWidth > MOBILE_BREAKPOINT) return;
-        
         touchStartY = e.touches[0].clientY;
         isDragging = true;
-        elements.sidebarWrap.style.transition = 'none';
+        elements.sidebar.style.transition = 'none';
+        elements.overlay.style.transition = 'opacity 0.15s ease';
     }
     
     function handleTouchMove(e) {
@@ -69,30 +66,18 @@ window.initSidebar = function() {
         touchCurrentY = e.touches[0].clientY;
         const deltaY = touchCurrentY - touchStartY;
         
-        if (deltaY < 0 && elements.sidebar.classList.contains('is-open')) {
-            // Dragging upward
-            const currentHeight = isFullHeight ? window.innerHeight : DEFAULT_HEIGHT;
-            const newHeight = Math.min(currentHeight - deltaY, window.innerHeight);
-            elements.sidebarWrap.style.height = `${newHeight}px`;
-        } else if (deltaY > 0) {
-            if (isFullHeight) {
-                // If we're at full height, first return to default height
-                const fullHeight = window.innerHeight;
-                const currentHeight = fullHeight - deltaY;
-                
-                if (currentHeight < DEFAULT_HEIGHT) {
-                    elements.sidebarWrap.style.height = `${DEFAULT_HEIGHT}px`;
-                    isFullHeight = false;
-                } else {
-                    elements.sidebarWrap.style.height = `${currentHeight}px`;
-                }
-            } else {
-                // Normal downward drag for closing
-                const resistance = 0.4;
-                elements.sidebar.style.transform = `translateY(${deltaY * resistance}px)`;
-                elements.overlay.style.opacity = `${1 - Math.min(deltaY / 200, 1)}`;
-            }
-        }
+        // Only allow dragging downward
+        if (deltaY < 0) return;
+        
+        // Add resistance to the drag
+        const resistance = 0.4;
+        const transform = `translateY(${deltaY * resistance}px)`;
+        elements.sidebar.style.transform = transform;
+        
+        // Adjust overlay opacity based on drag distance
+        const maxDrag = 200;
+        const opacity = 1 - Math.min(deltaY / maxDrag, 1);
+        elements.overlay.style.opacity = opacity;
     }
     
     function handleTouchEnd() {
@@ -100,36 +85,15 @@ window.initSidebar = function() {
         isDragging = false;
         
         const deltaY = touchCurrentY - touchStartY;
-        elements.sidebarWrap.style.transition = 'height 0.3s ease';
+        elements.sidebar.style.transition = '';
         
-        if (deltaY < 0) {
-            // Was dragging upward
-            const currentHeight = elements.sidebarWrap.offsetHeight;
-            
-            // If dragged more than halfway to full height, snap to full
-            if (currentHeight > (DEFAULT_HEIGHT + window.innerHeight) / 2) {
-                elements.sidebarWrap.style.height = `${window.innerHeight}px`;
-                isFullHeight = true;
-            } else {
-                elements.sidebarWrap.style.height = '';
-                isFullHeight = false;
-            }
-        } else if (deltaY > 0) {
-            if (isFullHeight) {
-                // If dragged down more than halfway from full height, snap to default
-                const currentHeight = elements.sidebarWrap.offsetHeight;
-                if (currentHeight < (window.innerHeight + DEFAULT_HEIGHT) / 2) {
-                    elements.sidebarWrap.style.height = '';
-                    isFullHeight = false;
-                } else {
-                    elements.sidebarWrap.style.height = `${window.innerHeight}px`;
-                }
-            } else if (deltaY > 100) {
-                toggleSidebar();
-            } else {
-                elements.sidebar.style.transform = '';
-                elements.overlay.style.opacity = '';
-            }
+        // If dragged more than 100px down, close the sidebar
+        if (deltaY > 100) {
+            toggleSidebar();
+        } else {
+            // Reset position with animation
+            elements.sidebar.style.transform = '';
+            elements.overlay.style.opacity = '';
         }
         
         touchStartY = 0;
@@ -151,29 +115,23 @@ window.initSidebar = function() {
         }
     });
     
+    // Handle resize events
     let resizeTimeout;
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
-            if (isFullHeight) {
-                elements.sidebarWrap.style.height = `${window.innerHeight}px`;
-            } else {
-                elements.sidebarWrap.style.height = '';
-            }
+            // Reset sidebar position and styles on resize
             elements.sidebar.style.transform = '';
             elements.overlay.style.opacity = '';
             
-            // Handle scroll lock on resize
-            if (window.innerWidth <= MOBILE_BREAKPOINT && elements.sidebar.classList.contains('is-open')) {
-                elements.pageWrap.style.overflow = 'hidden';
-                document.body.style.overflow = 'hidden';
-            } else {
+            // Reset pageWrap overflow if we resize above mobile breakpoint
+            if (window.innerWidth > MOBILE_BREAKPOINT) {
                 elements.pageWrap.style.overflow = '';
-                document.body.style.overflow = '';
             }
         }, 250);
     }, { passive: true });
     
+    // Touch event listeners for the handle
     if (elements.handle) {
         elements.handle.addEventListener('touchstart', handleTouchStart);
         document.addEventListener('touchmove', handleTouchMove, { passive: true });
