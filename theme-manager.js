@@ -30,21 +30,21 @@ const THEME_CONFIG = {
     }
   
     updateStatusBarColor(isDark) {
-        // Initially set meta tags with transition
-        const setMetaColors = (color) => {
-          document.querySelectorAll('meta[name="theme-color"], meta[name="apple-mobile-web-app-status-bar"]')
-            .forEach(meta => meta.setAttribute('content', color));
+        const updateMetas = () => {
+          const themeColor = getComputedStyle(this.pageWrapper)
+            .getPropertyValue('--theme--background').trim();
+          
+          requestAnimationFrame(() => {
+            document.querySelectorAll('meta[name="theme-color"], meta[name="apple-mobile-web-app-status-bar"]')
+              .forEach(meta => meta.setAttribute('content', themeColor));
+          });
         };
       
-        // Set initial color immediately
-        const currentColor = getComputedStyle(this.pageWrapper).getPropertyValue('--theme--background').trim();
-        setMetaColors(currentColor);
+        // Update immediately when theme changes
+        updateMetas();
         
-        // Update color after transition completes
-        setTimeout(() => {
-          const finalColor = getComputedStyle(this.pageWrapper).getPropertyValue('--theme--background').trim();
-          setMetaColors(finalColor);
-        }, THEME_CONFIG.TRANSITION.DURATION);
+        // Update again after CSS transition completes
+        this.pageWrapper.addEventListener('transitionend', updateMetas, { once: true });
       }
   
     setTheme(isDark, saveToStorage = false) {
