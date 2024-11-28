@@ -10,7 +10,7 @@ window.initSidebar = function() {
     };
     
     const MOBILE_BREAKPOINT = 478;
-    const ANIMATION_DURATION = 300;
+    const ANIMATION_DURATION = 200;
     let rangeSliderInitialized = false;
     let touchStartY = 0;
     let touchCurrentY = 0;
@@ -35,7 +35,7 @@ window.initSidebar = function() {
         elements.sidebar.classList.toggle('is-open');
         elements.overlay.classList.toggle('is-open');
         
-        // Handle mobile scroll lock (under 478px) - ONLY on pageWrap
+        // Handle mobile scroll lock (under 478px)
         if (window.innerWidth <= MOBILE_BREAKPOINT) {
             if (elements.sidebar.classList.contains('is-open')) {
                 elements.pageWrap.style.overflow = 'clip';
