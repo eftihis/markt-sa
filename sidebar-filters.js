@@ -29,10 +29,9 @@ window.initSidebar = function() {
     function toggleSidebar() {
         console.log('Toggling sidebar');
         
-        // Reset any transform and heights
         elements.sidebar.style.transform = '';
         elements.overlay.style.opacity = '';
-        elements.sidebarWrap.style.height = ''; // Reset to CSS default (35rem)
+        elements.sidebarWrap.style.height = '';
         
         elements.sidebar.classList.toggle('is-open');
         elements.overlay.classList.toggle('is-open');
@@ -53,12 +52,12 @@ window.initSidebar = function() {
     }
     
     function handleTouchStart(e) {
+        console.log('Touch start');
         if (window.innerWidth > MOBILE_BREAKPOINT) return;
         
         touchStartY = e.touches[0].clientY;
         isDragging = true;
-        
-        // Remove transitions for smooth dragging
+        elements.sidebar.style.transition = 'none';
         elements.sidebarWrap.style.transition = 'none';
     }
     
@@ -68,20 +67,23 @@ window.initSidebar = function() {
         touchCurrentY = e.touches[0].clientY;
         const deltaY = touchCurrentY - touchStartY;
         
+        console.log('Touch move:', {
+            deltaY,
+            isOpen: elements.sidebar.classList.contains('is-open'),
+            currentHeight: elements.sidebarWrap.offsetHeight,
+            windowHeight: window.innerHeight
+        });
+        
         if (deltaY < 0 && elements.sidebar.classList.contains('is-open')) {
-            // Dragging upward when sidebar is open
+            console.log('Attempting upward drag');
             const currentHeight = elements.sidebarWrap.offsetHeight;
             const newHeight = Math.min(currentHeight - deltaY, window.innerHeight);
+            console.log('New height:', newHeight);
             elements.sidebarWrap.style.height = `${newHeight}px`;
         } else if (deltaY > 0) {
-            // Dragging downward
             const resistance = 0.4;
-            const transform = `translateY(${deltaY * resistance}px)`;
-            elements.sidebar.style.transform = transform;
-            
-            const maxDrag = 200;
-            const opacity = 1 - Math.min(deltaY / maxDrag, 1);
-            elements.overlay.style.opacity = opacity;
+            elements.sidebar.style.transform = `translateY(${deltaY * resistance}px)`;
+            elements.overlay.style.opacity = `${1 - Math.min(deltaY / 200, 1)}`;
         }
     }
     
@@ -90,25 +92,29 @@ window.initSidebar = function() {
         isDragging = false;
         
         const deltaY = touchCurrentY - touchStartY;
+        elements.sidebar.style.transition = '';
+        elements.sidebarWrap.style.transition = 'height 0.3s ease';
         
-        // Reset transitions
-        elements.sidebarWrap.style.transition = '';
+        console.log('Touch end:', { deltaY });
         
         if (deltaY < 0) {
-            // Was dragging upward
             const currentHeight = elements.sidebarWrap.offsetHeight;
             const defaultHeight = parseInt(getComputedStyle(elements.sidebarWrap).height);
             
-            // If dragged more than halfway to full height, snap to full
+            console.log('End heights:', {
+                current: currentHeight,
+                default: defaultHeight,
+                window: window.innerHeight
+            });
+            
             if (currentHeight > (defaultHeight + window.innerHeight) / 2) {
                 elements.sidebarWrap.style.height = `${window.innerHeight}px`;
             } else {
-                elements.sidebarWrap.style.height = ''; // Reset to default (35rem)
+                elements.sidebarWrap.style.height = '';
             }
         } else if (deltaY > 100) {
             toggleSidebar();
         } else {
-            // Reset position
             elements.sidebar.style.transform = '';
             elements.overlay.style.opacity = '';
         }
