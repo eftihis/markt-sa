@@ -42,7 +42,6 @@ window.initSidebar = function() {
                 document.body.style.overflow = 'hidden';
             } else {
                 elements.pageWrap.style.overflow = '';
-                document.body.style.overflow = '';
             }
         }
         
