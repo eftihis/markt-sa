@@ -1,3 +1,4 @@
+// Theme Manager Script
 const THEME_CONFIG = {
   STORAGE_KEY: 'theme',
   ATTRIBUTE: 'data-theme',
@@ -25,10 +26,27 @@ class ThemeManager {
     this.setupEventListeners();
   }
 
+  updateStatusBarColor(isDark) {
+    const themeColor = getComputedStyle(this.pageWrapper)
+      .getPropertyValue('--theme--background').trim();
+    
+    document.querySelectorAll('meta[name="theme-color"]').forEach(meta => {
+      meta.setAttribute('content', themeColor);
+    });
+    
+    document.querySelectorAll('meta[name="apple-mobile-web-app-status-bar"]').forEach(meta => {
+      meta.setAttribute('content', themeColor);
+    });
+  }
+
   setTheme(isDark, saveToStorage = false) {
     const theme = isDark ? THEME_CONFIG.THEMES.DARK : THEME_CONFIG.THEMES.LIGHT;
     
     this.pageWrapper.setAttribute(THEME_CONFIG.ATTRIBUTE, theme);
+    
+    requestAnimationFrame(() => {
+      this.updateStatusBarColor(isDark);
+    });
     
     if (saveToStorage) {
       this.saveThemePreference(theme);
@@ -37,7 +55,7 @@ class ThemeManager {
     if (this.themeToggle) {
       this.updateToggleButton(isDark);
     }
-
+    
     window.dispatchEvent(new CustomEvent('themechange', { 
       detail: { theme, isDark } 
     }));
@@ -71,9 +89,7 @@ class ThemeManager {
   handleSystemPreference = (event) => {
     const prefersDark = event.matches;
     
-    // Always clear stored preference on system change
     this.clearThemePreference();
-    // Apply the current system preference
     this.setTheme(prefersDark, false);
   }
 
@@ -82,24 +98,20 @@ class ThemeManager {
     const systemPrefersDark = this.mediaQuery.matches;
     
     if (storedTheme) {
-      // Use stored preference if it exists
       this.setTheme(storedTheme === THEME_CONFIG.THEMES.DARK, false);
     } else {
-      // Otherwise use system preference
       this.setTheme(systemPrefersDark, false);
     }
   }
 
   setupEventListeners() {
     this.mediaQuery.addEventListener('change', this.handleSystemPreference);
-
     if (this.themeToggle) {
       this.themeToggle.addEventListener('click', () => {
         const isDark = this.getCurrentTheme();
         this.setTheme(!isDark, true);
       });
     }
-
     window.addEventListener('unload', () => {
       this.mediaQuery.removeEventListener('change', this.handleSystemPreference);
     });
@@ -115,4 +127,3 @@ if (document.readyState === 'loading') {
 } else {
   initThemeToggle();
 }
-</script>
