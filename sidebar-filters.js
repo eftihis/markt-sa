@@ -7,7 +7,7 @@ window.initSidebar = function() {
         toggleButton: document.getElementById('toggleButton'),
         handle: document.getElementById('sidebar-handle'),
         pageWrap: document.querySelector('.page_wrap'),
-        sidebarWrap: document.querySelector('.sidebar_wrap') // Add sidebar wrap reference
+        sidebarWrap: document.querySelector('.sidebar_wrap')
     };
     
     const MOBILE_BREAKPOINT = 478;
@@ -15,9 +15,7 @@ window.initSidebar = function() {
     let rangeSliderInitialized = false;
     let touchStartY = 0;
     let touchCurrentY = 0;
-    let startHeight = 0;
     let isDragging = false;
-    let isFullHeight = false;
     
     function initializeRangeSlider() {
         if (rangeSliderInitialized) return;
@@ -31,11 +29,10 @@ window.initSidebar = function() {
     function toggleSidebar() {
         console.log('Toggling sidebar');
         
-        // Reset any transform and states
+        // Reset any transform and heights
         elements.sidebar.style.transform = '';
         elements.overlay.style.opacity = '';
-        elements.sidebarWrap.style.height = '';
-        isFullHeight = false;
+        elements.sidebarWrap.style.height = ''; // Reset to CSS default (35rem)
         
         elements.sidebar.classList.toggle('is-open');
         elements.overlay.classList.toggle('is-open');
@@ -59,10 +56,9 @@ window.initSidebar = function() {
         if (window.innerWidth > MOBILE_BREAKPOINT) return;
         
         touchStartY = e.touches[0].clientY;
-        startHeight = elements.sidebarWrap.offsetHeight;
         isDragging = true;
-        elements.sidebar.style.transition = 'none';
-        elements.overlay.style.transition = 'opacity 0.15s ease';
+        
+        // Remove transitions for smooth dragging
         elements.sidebarWrap.style.transition = 'none';
     }
     
@@ -72,35 +68,20 @@ window.initSidebar = function() {
         touchCurrentY = e.touches[0].clientY;
         const deltaY = touchCurrentY - touchStartY;
         
-        if (deltaY < 0) {
-            // Dragging upward
-            const fullHeight = window.innerHeight;
-            const currentHeight = startHeight - deltaY;
-            const height = Math.min(currentHeight, fullHeight);
-            elements.sidebarWrap.style.height = `${height}px`;
-            
-            // Adjust overlay opacity based on height
-            const opacity = 0.6 + (0.4 * (height / fullHeight));
-            elements.overlay.style.opacity = opacity;
-        } else {
+        if (deltaY < 0 && elements.sidebar.classList.contains('is-open')) {
+            // Dragging upward when sidebar is open
+            const currentHeight = elements.sidebarWrap.offsetHeight;
+            const newHeight = Math.min(currentHeight - deltaY, window.innerHeight);
+            elements.sidebarWrap.style.height = `${newHeight}px`;
+        } else if (deltaY > 0) {
             // Dragging downward
-            if (isFullHeight) {
-                // If currently full height, first return to mid position
-                const fullHeight = window.innerHeight;
-                const defaultHeight = 35 * 16; // 35rem in pixels
-                const currentHeight = fullHeight - deltaY;
-                
-                if (currentHeight < defaultHeight) {
-                    elements.sidebarWrap.style.height = `${defaultHeight}px`;
-                    isFullHeight = false;
-                } else {
-                    elements.sidebarWrap.style.height = `${currentHeight}px`;
-                }
-            } else {
-                // Normal downward drag for closing
-                elements.sidebar.style.transform = `translateY(${deltaY * 0.4}px)`;
-                elements.overlay.style.opacity = 1 - Math.min(deltaY / 200, 1);
-            }
+            const resistance = 0.4;
+            const transform = `translateY(${deltaY * resistance}px)`;
+            elements.sidebar.style.transform = transform;
+            
+            const maxDrag = 200;
+            const opacity = 1 - Math.min(deltaY / maxDrag, 1);
+            elements.overlay.style.opacity = opacity;
         }
     }
     
@@ -109,45 +90,27 @@ window.initSidebar = function() {
         isDragging = false;
         
         const deltaY = touchCurrentY - touchStartY;
-        elements.sidebar.style.transition = '';
-        elements.overlay.style.transition = '';
-        elements.sidebarWrap.style.transition = 'height 0.3s ease';
+        
+        // Reset transitions
+        elements.sidebarWrap.style.transition = '';
         
         if (deltaY < 0) {
             // Was dragging upward
             const currentHeight = elements.sidebarWrap.offsetHeight;
-            const fullHeight = window.innerHeight;
-            const defaultHeight = 35 * 16; // 35rem in pixels
+            const defaultHeight = parseInt(getComputedStyle(elements.sidebarWrap).height);
             
             // If dragged more than halfway to full height, snap to full
-            if (currentHeight > (defaultHeight + fullHeight) / 2) {
-                elements.sidebarWrap.style.height = `${fullHeight}px`;
-                isFullHeight = true;
+            if (currentHeight > (defaultHeight + window.innerHeight) / 2) {
+                elements.sidebarWrap.style.height = `${window.innerHeight}px`;
             } else {
-                elements.sidebarWrap.style.height = `${defaultHeight}px`;
-                isFullHeight = false;
+                elements.sidebarWrap.style.height = ''; // Reset to default (35rem)
             }
+        } else if (deltaY > 100) {
+            toggleSidebar();
         } else {
-            // Was dragging downward
-            if (isFullHeight) {
-                const currentHeight = elements.sidebarWrap.offsetHeight;
-                const defaultHeight = 35 * 16;
-                
-                // If dragged more than halfway to default height, snap to default
-                if (currentHeight < (window.innerHeight + defaultHeight) / 2) {
-                    elements.sidebarWrap.style.height = `${defaultHeight}px`;
-                    isFullHeight = false;
-                } else {
-                    elements.sidebarWrap.style.height = `${window.innerHeight}px`;
-                }
-            } else if (deltaY > 100) {
-                // Close if dragged down enough
-                toggleSidebar();
-            } else {
-                // Reset position
-                elements.sidebar.style.transform = '';
-                elements.overlay.style.opacity = '';
-            }
+            // Reset position
+            elements.sidebar.style.transform = '';
+            elements.overlay.style.opacity = '';
         }
         
         touchStartY = 0;
@@ -176,7 +139,6 @@ window.initSidebar = function() {
             elements.sidebar.style.transform = '';
             elements.overlay.style.opacity = '';
             elements.sidebarWrap.style.height = '';
-            isFullHeight = false;
             
             if (window.innerWidth > MOBILE_BREAKPOINT) {
                 elements.pageWrap.style.overflow = '';
