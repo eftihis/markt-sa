@@ -27,13 +27,6 @@ window.initSidebar = function() {
         document.body.appendChild(script);
         rangeSliderInitialized = true;
     }
-
-    function setScrollLock(lock) {
-        if (window.innerWidth <= MOBILE_BREAKPOINT) {
-            elements.pageWrap.style.overflow = lock ? 'hidden' : '';
-            document.body.style.overflow = lock ? 'hidden' : '';
-        }
-    }
     
     function toggleSidebar() {
         console.log('Toggling sidebar');
@@ -46,7 +39,16 @@ window.initSidebar = function() {
         elements.sidebar.classList.toggle('is-open');
         elements.overlay.classList.toggle('is-open');
         
-        setScrollLock(elements.sidebar.classList.contains('is-open'));
+        // Handle mobile scroll lock (under 478px)
+        if (window.innerWidth <= MOBILE_BREAKPOINT) {
+            if (elements.sidebar.classList.contains('is-open')) {
+                elements.pageWrap.style.overflow = 'hidden';
+                document.body.style.overflow = 'hidden';
+            } else {
+                elements.pageWrap.style.overflow = '';
+                document.body.style.overflow = '';
+            }
+        }
         
         if (elements.sidebar.classList.contains('is-open')) {
             setTimeout(initializeRangeSlider, ANIMATION_DURATION);
@@ -161,8 +163,14 @@ window.initSidebar = function() {
             elements.sidebar.style.transform = '';
             elements.overlay.style.opacity = '';
             
-            // Reset scroll lock on resize
-            setScrollLock(elements.sidebar.classList.contains('is-open'));
+            // Handle scroll lock on resize
+            if (window.innerWidth <= MOBILE_BREAKPOINT && elements.sidebar.classList.contains('is-open')) {
+                elements.pageWrap.style.overflow = 'hidden';
+                document.body.style.overflow = 'hidden';
+            } else {
+                elements.pageWrap.style.overflow = '';
+                document.body.style.overflow = '';
+            }
         }, 250);
     }, { passive: true });
     
