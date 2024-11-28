@@ -15,6 +15,7 @@ window.initSidebar = function() {
     let touchStartY = 0;
     let touchCurrentY = 0;
     let isDragging = false;
+    let scrollPosition = 0;
     
     function initializeRangeSlider() {
         if (rangeSliderInitialized) return;
@@ -23,6 +24,51 @@ window.initSidebar = function() {
         script.src = "https://cdn.jsdelivr.net/npm/@finsweet/attributes-rangeslider@1/rangeslider.js";
         document.body.appendChild(script);
         rangeSliderInitialized = true;
+    }
+    
+    function lockScroll() {
+        // Store current scroll position
+        scrollPosition = window.pageYOffset;
+        
+        // Add styles to prevent scroll
+        const scrollLockStyles = {
+            overflow: 'hidden',
+            position: 'fixed',
+            top: `-${scrollPosition}px`,
+            width: '100%'
+        };
+        
+        // Apply styles to both body and pageWrap
+        Object.assign(document.body.style, scrollLockStyles);
+        Object.assign(elements.pageWrap.style, {
+            overflow: 'hidden',
+            position: 'relative'
+        });
+        
+        // Prevent touchmove on document when sidebar is open
+        document.addEventListener('touchmove', preventScroll, { passive: false });
+    }
+    
+    function unlockScroll() {
+        // Remove scroll lock styles
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        elements.pageWrap.style.overflow = '';
+        elements.pageWrap.style.position = '';
+        
+        // Restore scroll position
+        window.scrollTo(0, scrollPosition);
+        
+        // Remove touchmove prevention
+        document.removeEventListener('touchmove', preventScroll);
+    }
+    
+    function preventScroll(e) {
+        // Allow scrolling within the sidebar
+        if (elements.sidebar.contains(e.target)) return;
+        e.preventDefault();
     }
     
     function toggleSidebar() {
@@ -35,13 +81,12 @@ window.initSidebar = function() {
         elements.sidebar.classList.toggle('is-open');
         elements.overlay.classList.toggle('is-open');
         
-        // Handle mobile scroll lock (under 478px) - ONLY on pageWrap
+        // Handle mobile scroll lock (under 478px)
         if (window.innerWidth <= MOBILE_BREAKPOINT) {
             if (elements.sidebar.classList.contains('is-open')) {
-                elements.pageWrap.style.overflow = 'hidden';
-                document.body.style.overflow = 'hidden';
+                lockScroll();
             } else {
-                elements.pageWrap.style.overflow = '';
+                unlockScroll();
             }
         }
         
@@ -123,9 +168,9 @@ window.initSidebar = function() {
             elements.sidebar.style.transform = '';
             elements.overlay.style.opacity = '';
             
-            // Reset pageWrap overflow if we resize above mobile breakpoint
+            // Reset scroll lock if we resize above mobile breakpoint
             if (window.innerWidth > MOBILE_BREAKPOINT) {
-                elements.pageWrap.style.overflow = '';
+                unlockScroll();
             }
         }, 250);
     }, { passive: true });
