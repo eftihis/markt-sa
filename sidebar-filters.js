@@ -5,24 +5,46 @@ window.initSidebar = function() {
         sidebar: document.getElementById('sidebar'),
         overlay: document.getElementById('overlay'),
         toggleButton: document.getElementById('toggleButton'),
-        handle: document.getElementById('sidebar-handle'),
-        pageWrap: document.querySelector('.page_wrap')
+        wrapper: document.getElementById('parent-wrapper'),
+        pageWrap: document.querySelector('.page_wrap'),
+        handle: document.getElementById('sidebar-handle') // Updated ID
     };
     
-    const MOBILE_BREAKPOINT = 478;
     const ANIMATION_DURATION = 300;
     let rangeSliderInitialized = false;
+    let mobileInitialized = false;
+    let desktopInitialized = false;
     let touchStartY = 0;
     let touchCurrentY = 0;
     let isDragging = false;
     
     function initializeRangeSlider() {
-        if (rangeSliderInitialized) return;
+        if (window.innerWidth < 992 && mobileInitialized) return;
+        if (window.innerWidth >= 992 && desktopInitialized) return;
         
-        const script = document.createElement('script');
-        script.src = "https://cdn.jsdelivr.net/npm/@finsweet/attributes-rangeslider@1/rangeslider.js";
-        document.body.appendChild(script);
-        rangeSliderInitialized = true;
+        if (!rangeSliderInitialized) {
+            const script = document.createElement('script');
+            script.src = "https://cdn.jsdelivr.net/npm/@finsweet/attributes-rangeslider@1/rangeslider.js";
+            document.body.appendChild(script);
+            rangeSliderInitialized = true;
+        } else {
+            reinitializeRangeSlider();
+        }
+        
+        if (window.innerWidth < 992) {
+            mobileInitialized = true;
+        } else {
+            desktopInitialized = true;
+        }
+    }
+    
+    function reinitializeRangeSlider() {
+        if (!elements.sidebar.classList.contains('is-open')) return;
+
+        if (window.FsAttributes && window.FsAttributes.rangeslider) {
+            window.FsAttributes.rangeslider.destroy();
+            window.FsAttributes.rangeslider.init();
+        }
     }
     
     function toggleSidebar() {
@@ -32,24 +54,28 @@ window.initSidebar = function() {
         elements.sidebar.style.transform = '';
         elements.overlay.style.opacity = '';
         
-        const isOpening = !elements.sidebar.classList.contains('is-open');
-        
         elements.sidebar.classList.toggle('is-open');
         elements.overlay.classList.toggle('is-open');
+        elements.wrapper.classList.toggle('is-open');
         
-        // Simple scroll lock implementation
-        if (window.innerWidth <= MOBILE_BREAKPOINT) {
-            document.body.style.overflow = isOpening ? 'hidden' : '';
+        if (window.innerWidth < 992) {
+            if (elements.sidebar.classList.contains('is-open')) {
+                elements.pageWrap.style.overflow = 'hidden';
+                document.body.style.overflow = 'hidden';
+            } else {
+                elements.pageWrap.style.overflow = '';
+                document.body.style.overflow = '';
+            }
         }
         
-        // Initialize range slider on first open
-        if (isOpening) {
+        if (elements.sidebar.classList.contains('is-open')) {
             setTimeout(initializeRangeSlider, ANIMATION_DURATION);
         }
     }
     
-    // Touch event handlers for swipe
+    // Touch event handlers
     function handleTouchStart(e) {
+        if (window.innerWidth >= 992) return;
         touchStartY = e.touches[0].clientY;
         isDragging = true;
         elements.sidebar.style.transition = 'none';
@@ -98,34 +124,21 @@ window.initSidebar = function() {
     
     // Event Listeners
     elements.toggleButton.addEventListener('click', (e) => {
+        console.log('Toggle clicked');
         e.preventDefault();
         e.stopPropagation();
         toggleSidebar();
     });
     
-    elements.overlay.addEventListener('click', toggleSidebar);
+    elements.overlay.addEventListener('click', () => {
+        toggleSidebar();
+    });
     
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && elements.sidebar.classList.contains('is-open')) {
+        if (e.key === 'Escape' && window.innerWidth >= 992) {
             toggleSidebar();
         }
     });
-    
-    // Handle resize events
-    let resizeTimeout;
-    window.addEventListener('resize', () => {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(() => {
-            // Reset sidebar position and styles on resize
-            elements.sidebar.style.transform = '';
-            elements.overlay.style.opacity = '';
-            
-            // Reset overflow if above mobile breakpoint
-            if (window.innerWidth > MOBILE_BREAKPOINT) {
-                document.body.style.overflow = '';
-            }
-        }, 250);
-    }, { passive: true });
     
     // Touch event listeners for the handle
     if (elements.handle) {
@@ -133,4 +146,7 @@ window.initSidebar = function() {
         document.addEventListener('touchmove', handleTouchMove, { passive: true });
         document.addEventListener('touchend', handleTouchEnd);
     }
+    
+    console.log('Sidebar initialization complete');
 };
+console.log('Sidebar script loaded');
