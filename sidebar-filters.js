@@ -35,13 +35,14 @@ window.initSidebar = function() {
         elements.sidebar.classList.toggle('is-open');
         elements.overlay.classList.toggle('is-open');
         
-        // Handle mobile scroll lock (under 478px) - ONLY on pageWrap
+        // Handle mobile scroll lock (under 478px) 
         if (window.innerWidth <= MOBILE_BREAKPOINT) {
             if (elements.sidebar.classList.contains('is-open')) {
-                elements.pageWrap.style.overflow = 'hidden';
+                elements.pageWrap.style.overflow = 'clip';
                 document.body.style.overflow = 'hidden';
             } else {
                 elements.pageWrap.style.overflow = '';
+                document.body.style.overflow = '';
             }
         }
         
