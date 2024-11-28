@@ -57,7 +57,6 @@ window.initSidebar = function() {
         }
     }
     
-    // Touch event handlers for swipe
     function handleTouchStart(e) {
         touchStartY = e.touches[0].clientY;
         isDragging = true;
@@ -73,9 +72,10 @@ window.initSidebar = function() {
         const deltaY = touchCurrentY - touchStartY;
         
         if (deltaY < 0 && elements.sidebar.classList.contains('is-open')) {
-            // Dragging upward - expand height
+            // Make upward drag less sensitive
+            const resistance = 0.3; // Add resistance to upward movement
             const currentHeight = isFullHeight ? window.innerHeight : DEFAULT_HEIGHT;
-            const newHeight = Math.min(currentHeight - deltaY, window.innerHeight);
+            const newHeight = Math.min(currentHeight - (deltaY * resistance), window.innerHeight);
             elements.sidebarWrap.style.height = `${newHeight}px`;
 
             // Adjust overlay opacity based on height
@@ -85,15 +85,18 @@ window.initSidebar = function() {
         } else if (deltaY > 0) {
             if (isFullHeight) {
                 // If at full height, first return to default height
+                const resistance = 0.3; // Add resistance to downward movement too
                 const fullHeight = window.innerHeight;
-                const currentHeight = fullHeight - deltaY;
+                const currentHeight = fullHeight - (deltaY * resistance);
                 
                 if (currentHeight < DEFAULT_HEIGHT) {
-                    elements.sidebarWrap.style.height = '';
+                    elements.sidebarWrap.style.height = `${DEFAULT_HEIGHT}px`;
                     isFullHeight = false;
                 } else {
                     elements.sidebarWrap.style.height = `${currentHeight}px`;
                 }
+                // Prevent closing while transitioning from full height
+                return;
             } else {
                 // Normal downward drag for closing
                 const resistance = 0.4;
@@ -115,8 +118,8 @@ window.initSidebar = function() {
             // Was dragging upward
             const currentHeight = elements.sidebarWrap.offsetHeight;
             
-            // If dragged more than halfway to full height, snap to full
-            if (currentHeight > (DEFAULT_HEIGHT + window.innerHeight) / 2) {
+            // Require more dragging to snap to full height (75% instead of 50%)
+            if (currentHeight > (DEFAULT_HEIGHT + (window.innerHeight - DEFAULT_HEIGHT) * 0.75)) {
                 elements.sidebarWrap.style.height = `${window.innerHeight}px`;
                 isFullHeight = true;
             } else {
@@ -125,9 +128,10 @@ window.initSidebar = function() {
             }
         } else if (deltaY > 0) {
             if (isFullHeight) {
-                // If dragged down more than halfway from full height, snap to default
+                // If dragged down from full height
                 const currentHeight = elements.sidebarWrap.offsetHeight;
-                if (currentHeight < (window.innerHeight + DEFAULT_HEIGHT) / 2) {
+                // Require less dragging to snap to default (25% instead of 50%)
+                if (currentHeight < (window.innerHeight - (window.innerHeight - DEFAULT_HEIGHT) * 0.25)) {
                     elements.sidebarWrap.style.height = '';
                     isFullHeight = false;
                 } else {
