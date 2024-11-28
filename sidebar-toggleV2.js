@@ -16,6 +16,36 @@ window.initSidebar = function() {
     let touchStartY = 0;
     let touchCurrentY = 0;
     let isDragging = false;
+    let scrollPosition = 0;
+    
+    function lockScroll() {
+        // Store current scroll position
+        scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+        
+        // Add styles to prevent scroll and maintain position
+        const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+        
+        document.body.style.cssText = `
+            overflow: hidden;
+            position: fixed;
+            top: -${scrollPosition}px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding-right: ${scrollBarWidth}px;
+        `;
+        
+        elements.pageWrap.style.overflow = 'hidden';
+    }
+    
+    function unlockScroll() {
+        // Remove all scroll-locking styles
+        document.body.style.cssText = '';
+        elements.pageWrap.style.overflow = '';
+        
+        // Restore scroll position
+        window.scrollTo(0, scrollPosition);
+    }
     
     function initializeRangeSlider() {
         if (rangeSliderInitialized) return;
@@ -33,23 +63,23 @@ window.initSidebar = function() {
         elements.sidebar.style.transform = '';
         elements.overlay.style.opacity = '';
         
+        const isOpening = !elements.sidebar.classList.contains('is-open');
+        
         elements.sidebar.classList.toggle('is-open');
         elements.overlay.classList.toggle('is-open');
         elements.parentWrap.classList.toggle('is-open');
         
-        // Handle mobile scroll lock (under 478px) - ONLY on pageWrap
+        // Handle scroll lock
         if (window.innerWidth <= MOBILE_BREAKPOINT) {
-            if (elements.sidebar.classList.contains('is-open')) {
-                elements.pageWrap.style.overflow = 'clip';
-                document.body.style.overflow = 'hidden';
+            if (isOpening) {
+                lockScroll();
             } else {
-                elements.pageWrap.style.overflow = '';
-                document.body.style.overflow = '';
+                unlockScroll();
             }
         }
         
         // Initialize range slider on first open
-        if (elements.sidebar.classList.contains('is-open')) {
+        if (isOpening) {
             setTimeout(initializeRangeSlider, ANIMATION_DURATION);
         }
     }
@@ -126,9 +156,9 @@ window.initSidebar = function() {
             elements.sidebar.style.transform = '';
             elements.overlay.style.opacity = '';
             
-            // Reset pageWrap overflow if we resize above mobile breakpoint
-            if (window.innerWidth > MOBILE_BREAKPOINT) {
-                elements.pageWrap.style.overflow = '';
+            // Reset scroll lock if we resize above mobile breakpoint
+            if (window.innerWidth > MOBILE_BREAKPOINT && elements.sidebar.classList.contains('is-open')) {
+                unlockScroll();
             }
         }, 250);
     }, { passive: true });
