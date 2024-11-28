@@ -32,22 +32,18 @@ window.initSidebar = function() {
         elements.sidebar.style.transform = '';
         elements.overlay.style.opacity = '';
         
+        const isOpening = !elements.sidebar.classList.contains('is-open');
+        
         elements.sidebar.classList.toggle('is-open');
         elements.overlay.classList.toggle('is-open');
         
-        // Handle mobile scroll lock (under 478px) 
+        // Simple scroll lock implementation
         if (window.innerWidth <= MOBILE_BREAKPOINT) {
-            if (elements.sidebar.classList.contains('is-open')) {
-                elements.pageWrap.style.overflow = 'clip';
-                document.body.style.overflow = 'hidden';
-            } else {
-                elements.pageWrap.style.overflow = '';
-                document.body.style.overflow = '';
-            }
+            document.body.style.overflow = isOpening ? 'hidden' : '';
         }
         
         // Initialize range slider on first open
-        if (elements.sidebar.classList.contains('is-open')) {
+        if (isOpening) {
             setTimeout(initializeRangeSlider, ANIMATION_DURATION);
         }
     }
@@ -124,9 +120,9 @@ window.initSidebar = function() {
             elements.sidebar.style.transform = '';
             elements.overlay.style.opacity = '';
             
-            // Reset pageWrap overflow if we resize above mobile breakpoint
+            // Reset overflow if above mobile breakpoint
             if (window.innerWidth > MOBILE_BREAKPOINT) {
-                elements.pageWrap.style.overflow = '';
+                document.body.style.overflow = '';
             }
         }, 250);
     }, { passive: true });
