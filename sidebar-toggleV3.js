@@ -1,5 +1,4 @@
 window.initSidebar = function() {
-    console.log('Initializing sidebar functionality');
     
     const elements = {
         sidebar: document.getElementById('sidebar'),
@@ -17,7 +16,6 @@ window.initSidebar = function() {
     let isDragging = false;
     
     function toggleSidebar() {
-        console.log('Toggling sidebar');
         
         // Reset any transform before toggling
         elements.sidebar.style.transform = '';
