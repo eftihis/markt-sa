@@ -95,10 +95,11 @@ window.initSidebar = function() {
     elements.overlay.addEventListener('click', toggleSidebar);
     
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && elements.sidebar.classList.contains('is-open')) {
-            toggleSidebar();
-        }
+    if (e.key === 'Escape' && !elements.sidebar.classList.contains('is-open')) {
+        toggleSidebar();
+    }
     });
+
     
     // Handle resize events
     let resizeTimeout;
