@@ -1,29 +1,41 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const navBtn = document.querySelector('.nav_button');
-    const elements = document.querySelectorAll('.nav_menu_wrap, .navbar_overlay');
-    
-    let isMenuOpen = false;
-    
-    const toggleClasses = () => {
-        isMenuOpen = !isMenuOpen;
-        
-        elements.forEach(element => {
-            if (isMenuOpen) {
-                element.classList.add('is-open');
-            } else {
-                element.classList.remove('is-open');
-            }
-        });
+    const elements = {
+        navButton: document.querySelector('.nav_button'),
+        navMenu: document.querySelector('.nav_menu_wrap'),
+        overlay: document.querySelector('.navbar_overlay'),
+        pageWrap: document.querySelector('.page_wrap')
     };
     
-    navBtn.addEventListener('click', toggleClasses);
+    function toggleNav() {
+        // Toggle classes
+        elements.navMenu.classList.toggle('is-open');
+        elements.openWrap.classList.toggle('is-open');
+        elements.closeWrap.classList.toggle('is-open');
+        elements.overlay.classList.toggle('is-open');
+        
+        // Handle page scroll
+        if (elements.navMenu.classList.contains('is-open')) {
+            elements.pageWrap.style.overflow = 'hidden';
+            document.body.style.overflow = 'hidden';
+        } else {
+            elements.pageWrap.style.overflow = '';
+            document.body.style.overflow = '';
+        }
+    }
     
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && isMenuOpen) {
-            isMenuOpen = false;
-            elements.forEach(element => {
-                element.classList.remove('is-open');
-            });
+    // Event Listeners
+    elements.navButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleNav();
+    });
+    
+    // Close menu when clicking overlay
+    elements.overlay.addEventListener('click', toggleNav);
+    
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && elements.navMenu.classList.contains('is-open')) {
+            toggleNav();
         }
     });
 });
