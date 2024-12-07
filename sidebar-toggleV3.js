@@ -21,13 +21,13 @@ window.initSidebar = function() {
         elements.sidebar.style.transform = '';
         elements.overlay.style.opacity = '';
         
-        elements.sidebar.classList.toggle('is-open');
-        elements.overlay.classList.toggle('is-open');
-        elements.parentWrap.classList.toggle('is-open');
+        elements.sidebar.classList.toggle('is-toggled');
+        elements.overlay.classList.toggle('is-toggled');
+        elements.parentWrap.classList.toggle('is-toggled');
         
         // Handle mobile scroll lock (under 478px) - ONLY on pageWrap
         if (window.innerWidth <= MOBILE_BREAKPOINT) {
-            if (elements.sidebar.classList.contains('is-open')) {
+            if (elements.sidebar.classList.contains('is-toggled')) {
                 elements.pageWrap.style.overflow = 'clip';
                 document.body.style.overflow = 'hidden';
             } else {
@@ -95,7 +95,7 @@ window.initSidebar = function() {
     elements.overlay.addEventListener('click', toggleSidebar);
     
     document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !elements.sidebar.classList.contains('is-open')) {
+    if (e.key === 'Escape' && !elements.sidebar.classList.contains('is-toggled')) {
         toggleSidebar();
     }
     });

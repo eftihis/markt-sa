@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const navBtn = document.querySelector('.nav_button');
-    const elements = document.querySelectorAll('.nav_menu_wrap, .nav_open_wrap, .nav_close_wrap, .navbar_overlay');
+    const elements = document.querySelectorAll('.nav_menu_wrap, .navbar_overlay');
     
     let isMenuOpen = false;
     
