@@ -9,8 +9,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function toggleNav() {
         // Toggle classes
         elements.navMenu.classList.toggle('is-open');
-        elements.openWrap.classList.toggle('is-open');
-        elements.closeWrap.classList.toggle('is-open');
         elements.overlay.classList.toggle('is-open');
         
         // Handle page scroll
@@ -31,7 +29,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // Close menu when clicking overlay
-    elements.overlay.addEventListener('click', toggleNav);
+    elements.overlay.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleNav();
+    });
     
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && elements.navMenu.classList.contains('is-open')) {
