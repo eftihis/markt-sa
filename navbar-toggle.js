@@ -3,13 +3,21 @@ document.addEventListener('DOMContentLoaded', () => {
         navButton: document.querySelector('.nav_button'),
         navMenu: document.querySelector('.nav_menu_wrap'),
         overlay: document.querySelector('.navbar_overlay'),
-        pageWrap: document.querySelector('.page_wrap')
+        pageWrap: document.querySelector('.page_wrap'),
+        mainWrap: document.querySelector('.main_wrap'),
+        hamburgerLines: document.querySelectorAll('.hamburger_7_line')
     };
     
     function toggleNav() {
         // Toggle classes
         elements.navMenu.classList.toggle('is-open');
         elements.overlay.classList.toggle('is-open');
+        elements.mainWrap.classList.toggle('is-shrunk');
+        
+        // Toggle hamburger lines
+        elements.hamburgerLines.forEach(line => {
+            line.classList.toggle('is-open');
+        });
         
         // Handle page scroll
         if (elements.navMenu.classList.contains('is-open')) {
