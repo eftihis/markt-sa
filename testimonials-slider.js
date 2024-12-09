@@ -1,5 +1,4 @@
 $(".swiper_testimonials").each(function (index) {
-    console.log("Found swiper_testimonials element:", this);
     
     const nextButton = $(this).find(".swiper_button.swiper-next")[0];
     const prevButton = $(this).find(".swiper_button.swiper-prev")[0];
