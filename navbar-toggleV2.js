@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
         overlay: document.querySelector('.navbar_overlay'),
         pageWrap: document.querySelector('.page_wrap'),
         mainWrap: document.querySelector('.main_wrap'),
-        navContent: document.querySelector('.nav_menu_contain'),
         hamburgerLines: document.querySelectorAll('.hamburger_7_line'),
         menuLinksWrap: document.querySelectorAll('.nav_item_wrap'),
         menuLinks: document.querySelectorAll('.nav_item')
@@ -15,7 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Toggle classes
         elements.navMenu.classList.toggle('is-open');
         elements.overlay.classList.toggle('is-open');
-        elements.navContent.classList.toggle('is-open');
         elements.mainWrap.classList.toggle('is-shrunk');
         
         // Toggle hamburger lines
