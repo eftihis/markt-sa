@@ -21,21 +21,20 @@ document.addEventListener('DOMContentLoaded', () => {
             line.classList.toggle('is-open');
         });
 
-        // Toggle menu links
-        setTimeout(() => {
-            elements.menuLinksWrap.forEach(line => {
+        // Stagger menu links wrap
+        elements.menuLinksWrap.forEach((line, index) => {
+            setTimeout(() => {
                 line.classList.toggle('is-open');
-            });
-          }, 150);
+            }, 150 + index * 50); // Add 50ms stagger for each link
+        });
 
-        // Toggle menu links
-        setTimeout(() => {
-            elements.menuLinks.forEach(line => {
+        // Stagger menu links
+        elements.menuLinks.forEach((line, index) => {
+            setTimeout(() => {
                 line.classList.toggle('is-open');
-            });
-          }, 150);
-        
-        
+            }, 150 + index * 50); // Add 50ms stagger for each link
+        });
+
         // Handle page scroll
         if (elements.navMenu.classList.contains('is-open')) {
             elements.pageWrap.style.overflow = 'hidden';
