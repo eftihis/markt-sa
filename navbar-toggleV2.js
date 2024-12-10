@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.menuLinksWrap.forEach((line, index) => {
             setTimeout(() => {
                 line.classList.toggle('is-open');
-            }, 150 + index * 50); // Add 50ms stagger for each link
+            }, 150 + index * 500); // Add 50ms stagger for each link
         });
 
         // Stagger menu links
