@@ -10,6 +10,43 @@ document.addEventListener('DOMContentLoaded', () => {
         menuLinks: document.querySelectorAll('.nav_item')
     };
 
+    // Scroll Lock Utility
+    const scrollLock = {
+        scrollPosition: 0,
+        
+        enable() {
+            // Store current scroll position
+            this.scrollPosition = window.pageYOffset;
+            
+            // Add styles to prevent content shift
+            const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+            
+            document.body.style.position = 'fixed';
+            document.body.style.top = `-${this.scrollPosition}px`;
+            document.body.style.width = '100%';
+            document.body.style.paddingRight = `${scrollBarWidth}px`;
+            
+            // iOS-specific fix
+            if (/iPhone|iPad|iPod/.test(navigator.platform)) {
+                document.body.style.height = '100vh';
+                document.body.style.overflow = 'hidden';
+            }
+        },
+        
+        disable() {
+            // Remove styles
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.width = '';
+            document.body.style.paddingRight = '';
+            document.body.style.height = '';
+            document.body.style.overflow = '';
+            
+            // Restore scroll position
+            window.scrollTo(0, this.scrollPosition);
+        }
+    };
+
     function toggleNav() {
         // Toggle classes
         elements.navMenu.classList.toggle('is-open');
@@ -25,23 +62,21 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.menuLinksWrap.forEach((line, index) => {
             setTimeout(() => {
                 line.classList.toggle('is-open');
-            }, 150 + index * 50); // Add 50ms stagger for each link
+            }, 150 + index * 50);
         });
 
         // Stagger menu links
         elements.menuLinks.forEach((line, index) => {
             setTimeout(() => {
                 line.classList.toggle('is-open');
-            }, 150 + index * 50); // Add 50ms stagger for each link
+            }, 150 + index * 50);
         });
 
-        // Handle page scroll
+        // Use improved scroll lock
         if (elements.navMenu.classList.contains('is-open')) {
-            elements.pageWrap.style.overflow = 'hidden';
-            document.body.style.overflow = 'hidden';
+            scrollLock.enable();
         } else {
-            elements.pageWrap.style.overflow = '';
-            document.body.style.overflow = '';
+            scrollLock.disable();
         }
     }
 
