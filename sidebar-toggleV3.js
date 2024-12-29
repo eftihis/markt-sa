@@ -125,9 +125,9 @@ window.initSidebar = function() {
     }
 
     // Simulate toggle click after initialization if above mobile breakpoint
-    if (window.innerWidth > MOBILE_BREAKPOINT) {
+   /* if (window.innerWidth > MOBILE_BREAKPOINT) {
         setTimeout(() => {
             elements.toggleButton.click();
-        }, 100); // Small delay to ensure DOM is ready
-    }
+        }, 100); // Small delay to ensure DOM is ready 
+    } */
 };
