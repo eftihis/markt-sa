@@ -29,7 +29,7 @@ window.initSidebar = function() {
        // Add delayed toggle for sidebar_wrap
        setTimeout(() => {
        elements.sidebarContent.classList.toggle('is-toggled');
-       }, 500);
+       }, 200);
         
         // Handle mobile scroll lock (under 478px) - ONLY on pageWrap
         if (window.innerWidth <= MOBILE_BREAKPOINT) {
