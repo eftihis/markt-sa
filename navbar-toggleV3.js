@@ -47,7 +47,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // Keep these ARIA attributes
+    if (elements.navButton) {
+        elements.navButton.setAttribute('aria-expanded', 'false');
+        elements.navButton.setAttribute('aria-controls', 'nav-menu');
+        elements.navButton.setAttribute('aria-label', 'Toggle navigation menu');
+    }
+    if (elements.navMenu) {
+        elements.navMenu.id = 'nav-menu';
+    }
+
     function toggleNav() {
+        const isOpen = elements.navMenu.classList.contains('is-open');
+        elements.navButton.setAttribute('aria-expanded', (!isOpen).toString());
+        
         // Toggle classes
         elements.navMenu.classList.toggle('is-open');
         elements.overlay.classList.toggle('is-open');
